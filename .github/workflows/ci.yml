@@ -1,4 +1,3 @@
-
 name: BioLit Scout CI/CD
 
 on:
@@ -52,7 +51,6 @@ jobs:
             ghcr.io/katia0610/biolit-scout:latest
             ghcr.io/katia0610/biolit-scout:${{ github.sha }}
 
-
       - name: Trigger Render deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -63,15 +61,8 @@ jobs:
             exit 1
           fi
 
-          curl --silent --show-error \
-            --request POST \
-            --max-time 30 \
-            --output response.txt \
-            --write-out "HTTP status: %{http_code}\n" \
-            "$RENDER_DEPLOY_HOOK_URL"
-
-          echo "Render response body:"
-          cat response.txt
+          curl --fail --silent --show-error \
+            --request POST "$RENDER_DEPLOY_HOOK_URL"
 
       - name: Smoke test deployed API
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

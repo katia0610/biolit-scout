@@ -1,4 +1,3 @@
-
 import os
 
 import httpx
@@ -10,8 +9,33 @@ load_dotenv()
 OPENALEX_API_URL = "https://api.openalex.org/works"
 
 
-def search_publications(query: str, per_page: int = 5) -> list[dict]:
-    """Search scientific publications using the OpenAlex API."""
+def reconstruct_abstract(
+    abstract_index: dict | None,
+) -> str | None:
+    """Reconstruct an abstract from OpenAlex's inverted index."""
+
+    if not abstract_index:
+        return None
+
+    words = {}
+
+    for word, positions in abstract_index.items():
+        for position in positions:
+            words[position] = word
+
+    if not words:
+        return None
+
+    return " ".join(
+        words[position] for position in sorted(words)
+    )
+
+
+def search_publications(
+    query: str,
+    per_page: int = 5,
+) -> list[dict]:
+    """Search scientific publications using OpenAlex."""
 
     api_key = os.getenv("OPENALEX_API_KEY")
 
@@ -53,7 +77,14 @@ def search_publications(query: str, per_page: int = 5) -> list[dict]:
             detail="Could not connect to OpenAlex.",
         )
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError:
+        raise HTTPException(
+            status_code=502,
+            detail="OpenAlex returned an invalid response.",
+        )
+
     publications = []
 
     for item in data.get("results", []):
@@ -63,6 +94,9 @@ def search_publications(query: str, per_page: int = 5) -> list[dict]:
             if authorship.get("author", {}).get("display_name")
         ]
 
+        location = item.get("primary_location") or {}
+        source = location.get("source") or {}
+
         publications.append(
             {
                 "id": item.get("id"),
@@ -70,6 +104,11 @@ def search_publications(query: str, per_page: int = 5) -> list[dict]:
                 "year": item.get("publication_year"),
                 "doi": item.get("doi"),
                 "authors": authors,
+                "abstract": reconstruct_abstract(
+                    item.get("abstract_inverted_index")
+                ),
+                "journal": source.get("display_name"),
+                "url": location.get("landing_page_url"),
             }
         )
 
