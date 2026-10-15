@@ -52,19 +52,7 @@ jobs:
             ghcr.io/katia0610/biolit-scout:latest
             ghcr.io/katia0610/biolit-scout:${{ github.sha }}
 
-      - name: Trigger Render deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "Render deploy hook is not configured"
-            exit 1
-          fi
-          curl --fail --silent --show-error \
-            --request POST "$RENDER_DEPLOY_HOOK_URL"
 
-      
       - name: Trigger Render deployment
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
@@ -84,7 +72,27 @@ jobs:
 
           echo "Render response body:"
           cat response.txt
-          
 
+      - name: Smoke test deployed API
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "Waiting for Render deployment..."
+          sleep 30
+
+          for i in $(seq 1 30); do
+            echo "Health check attempt $i/30"
+
+            if curl --fail --silent --show-error --max-time 15 \
+              https://biolit-scout.onrender.com/health; then
+              echo ""
+              echo "API health check passed!"
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "API did not become available in time."
+          exit 1
 
 
