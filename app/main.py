@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 from pydantic import BaseModel, Field
-
+from fastapi.middleware.cors import CORSMiddleware
+import os
 from app.services.openalex import search_publications
 from app.services.groq_analysis import analyze_publications
 
@@ -14,6 +15,23 @@ app = FastAPI(
     version="0.3.0",
 )
 
+netlify_origin = os.getenv("NETLIFY_ORIGIN", "").strip()
+
+allowed_origins = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
+
+if netlify_origin:
+    allowed_origins.append(netlify_origin.rstrip("/"))
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 class AnalysisRequest(BaseModel):
     q: str = Field(

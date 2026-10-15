@@ -1,0 +1,652 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f7faf9">
+<title>BioLit Scout — Scientific Discovery</title>
+<style>
+:root {
+  --primary: #168f83;
+  --primary-dark: #107368;
+  --primary-soft: #e4f5f1;
+  --coral: #f47c72;
+  --bg: #f7faf9;
+  --surface: #ffffff;
+  --text: #203431;
+  --muted: #788985;
+  --border: #e5eeeb;
+  --shadow: 0 8px 30px rgba(32, 75, 65, .055);
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .6; cursor: wait; }
+a { color: var(--primary-dark); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.app { min-height: 100vh; }
+.sidebar {
+  width: 238px;
+  position: fixed;
+  inset: 0 auto 0 0;
+  padding: 27px 18px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+.brand-icon {
+  width: 42px; height: 42px; border-radius: 14px;
+  display: grid; place-items: center;
+  background: var(--primary); color: white;
+  font-size: 23px; font-weight: 800;
+}
+.brand-name { font-weight: 800; font-size: 17px; letter-spacing: -.6px; }
+.brand-caption { font-size: 10px; color: var(--muted); letter-spacing: 1.5px; }
+.nav-label {
+  margin: 42px 10px 12px; font-size: 10px; font-weight: 800;
+  color: #a0aca8; letter-spacing: 1.6px;
+}
+.nav-item {
+  display: flex; gap: 12px; align-items: center;
+  width: 100%; padding: 12px 13px; margin-bottom: 5px;
+  border: 0; border-radius: 11px; text-align: left;
+  color: #647671; background: transparent;
+}
+.nav-item.active { background: var(--primary-soft); color: var(--primary-dark); font-weight: 700; }
+.nav-item .ico { width: 21px; text-align: center; font-size: 17px; }
+.sidebar-bottom { margin-top: auto; }
+.workspace {
+  padding: 15px; border: 1px solid var(--border);
+  border-radius: 14px; background: #fbfdfc;
+}
+.workspace small { display: block; color: var(--muted); }
+.workspace strong { font-size: 12px; }
+.main { margin-left: 238px; min-height: 100vh; }
+.topbar {
+  height: 76px; padding: 0 42px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,255,255,.84); border-bottom: 1px solid var(--border);
+}
+.breadcrumb { color: var(--muted); font-size: 12px; }
+.breadcrumb strong { color: var(--text); }
+.api-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: white; border: 1px solid var(--border);
+  border-radius: 30px; font-size: 11px; font-weight: 700;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #a8b5b0; }
+.dot.online { background: #2aaf7b; box-shadow: 0 0 0 4px #e5f7ed; }
+.dot.offline { background: #e56e65; }
+.content { max-width: 1440px; padding: 38px 42px 70px; margin: auto; }
+.hero {
+  display: flex; justify-content: space-between; gap: 20px;
+  align-items: flex-start; margin-bottom: 27px;
+}
+.eyebrow {
+  color: var(--primary-dark); font-size: 10px; font-weight: 800;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+h1 { font-size: clamp(27px, 3vw, 39px); line-height: 1.2; letter-spacing: -1.5px; margin: 8px 0 10px; }
+.hero p { color: var(--muted); margin: 0; max-width: 610px; }
+.version {
+  background: #fff1ee; color: #bf655b; border-radius: 9px;
+  padding: 7px 11px; white-space: nowrap; font-size: 11px; font-weight: 800;
+}
+.search-card {
+  padding: 25px; border: 1px solid var(--border);
+  background: var(--surface); border-radius: 21px; box-shadow: var(--shadow);
+}
+.card-label { display: block; font-size: 12px; font-weight: 750; margin-bottom: 9px; }
+.search-row { display: flex; gap: 11px; }
+.search-input {
+  flex: 1; min-width: 0; border: 1px solid #dce8e4; border-radius: 12px;
+  background: #fbfdfc; padding: 14px 16px; color: var(--text);
+  outline: none; transition: border .2s, box-shadow .2s;
+}
+.search-input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px #168f8318; }
+.primary-btn {
+  border: 0; background: var(--primary); color: white; border-radius: 12px;
+  padding: 13px 20px; font-weight: 750; transition: background .2s;
+}
+.primary-btn:hover { background: var(--primary-dark); }
+.secondary-btn {
+  background: white; border: 1px solid var(--border); border-radius: 11px;
+  padding: 10px 14px; color: var(--text); font-weight: 650;
+}
+.secondary-btn:hover { background: #f3f8f6; }
+.search-options {
+  display: flex; align-items: center; gap: 12px; margin-top: 15px;
+  flex-wrap: wrap; color: var(--muted); font-size: 12px;
+}
+select {
+  border: 1px solid var(--border); border-radius: 9px; padding: 7px 10px;
+  color: var(--text); background: white; outline: none;
+}
+.hint { margin-left: auto; font-size: 11px; }
+.stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+  margin: 23px 0 30px;
+}
+.stat {
+  padding: 19px 21px; background: white; border: 1px solid var(--border);
+  border-radius: 16px; display: flex; justify-content: space-between; gap: 10px;
+}
+.stat-label { color: var(--muted); font-size: 11px; font-weight: 650; }
+.stat-number { font-size: 26px; font-weight: 800; line-height: 1.4; letter-spacing: -.8px; }
+.stat-icon {
+  width: 39px; height: 39px; border-radius: 12px;
+  display: grid; place-items: center; font-size: 18px;
+  background: var(--primary-soft); color: var(--primary-dark);
+}
+.section-heading {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin: 32px 0 15px;
+}
+h2 { font-size: 18px; letter-spacing: -.4px; margin: 0; }
+.section-sub { color: var(--muted); font-size: 11px; margin-top: 3px; }
+.results-layout {
+  display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(260px, .85fr);
+  gap: 19px; align-items: start;
+}
+.publication-list { display: flex; flex-direction: column; gap: 14px; }
+.paper {
+  background: white; border: 1px solid var(--border);
+  border-radius: 16px; padding: 21px; box-shadow: 0 3px 12px #204b4105;
+}
+.paper-top { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.tag {
+  display: inline-flex; padding: 4px 8px; border-radius: 6px;
+  font-size: 10px; font-weight: 750; background: #e8f6f1; color: #147d6e;
+}
+.tag.neutral { background: #f0f3f2; color: #65736e; }
+.tag.coral { background: #fff0ed; color: #bd665d; }
+.paper h3 { font-size: 15px; line-height: 1.55; margin: 0 0 9px; }
+.paper-meta { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+.paper-abstract { font-size: 12px; line-height: 1.8; color: #61716b; margin: 0 0 15px; }
+.analysis { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 15px; }
+.analysis h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-dark); margin: 0 0 5px; }
+.analysis p { margin: 0 0 13px; font-size: 12px; color: #50625c; }
+.paper-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.paper-actions a { font-size: 11px; font-weight: 750; }
+.panel {
+  background: white; border: 1px solid var(--border);
+  border-radius: 16px; padding: 21px; margin-bottom: 15px;
+}
+.panel-title { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+.panel-icon {
+  width: 31px; height: 31px; display: grid; place-items: center;
+  border-radius: 10px; background: var(--primary-soft); color: var(--primary-dark);
+}
+.panel-title h3 { font-size: 13px; margin: 0; }
+.panel p { color: #5f706a; font-size: 12px; line-height: 1.85; margin: 0; white-space: pre-line; }
+.gap-list { padding-left: 20px; margin: 0; }
+.gap-list li { color: #52645e; font-size: 12px; margin: 0 0 13px; padding-left: 3px; line-height: 1.75; }
+.gap-list li::marker { color: var(--primary); font-weight: 800; }
+.notice { background: #f5f8f7; border-radius: 10px; padding: 12px; color: var(--muted); font-size: 10px; margin-top: 15px; }
+.empty {
+  text-align: center; padding: 48px 22px; background: white;
+  border: 1px dashed #d6e4df; border-radius: 17px;
+}
+.empty-icon { font-size: 32px; margin-bottom: 12px; }
+.empty h3 { margin: 0 0 6px; font-size: 15px; }
+.empty p { color: var(--muted); font-size: 12px; margin: 0 auto; max-width: 370px; }
+.loader {
+  width: 17px; height: 17px; display: inline-block; vertical-align: middle;
+  border: 2px solid #ffffff66; border-top-color: white; border-radius: 50%;
+  animation: spin .7s linear infinite; margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.alert {
+  padding: 14px 16px; border-radius: 12px; margin: 15px 0;
+  background: #fff1ef; border: 1px solid #f4d5d0; color: #a74f46;
+  font-size: 12px; white-space: pre-line;
+}
+.toast {
+  position: fixed; bottom: 22px; right: 22px; background: #203b35;
+  color: white; border-radius: 12px; padding: 13px 18px;
+  font-size: 12px; box-shadow: var(--shadow); z-index: 10;
+}
+.hidden { display: none !important; }
+footer { color: #98a7a1; text-align: center; padding: 32px 10px 0; font-size: 10px; }
+@media (max-width: 1050px) {
+  .sidebar { width: 200px; }
+  .main { margin-left: 200px; }
+  .content { padding: 30px 24px 55px; }
+  .topbar { padding: 0 24px; }
+  .results-layout { grid-template-columns: minmax(0, 1.3fr) minmax(230px, .8fr); }
+}
+@media (max-width: 760px) {
+  .sidebar { position: static; width: 100%; height: auto; padding: 14px 18px; }
+  .sidebar .nav-label, .sidebar .nav-item, .sidebar-bottom { display: none; }
+  .main { margin-left: 0; }
+  .topbar { height: 57px; padding: 0 18px; }
+  .content { padding: 27px 16px 45px; }
+  .hero { flex-direction: column; gap: 12px; }
+  .search-card { padding: 17px; }
+  .search-row { flex-direction: column; }
+  .search-row .primary-btn { width: 100%; }
+  .hint { margin-left: 0; width: 100%; }
+  .stats { gap: 8px; }
+  .stat { padding: 13px 11px; flex-direction: column-reverse; align-items: flex-start; }
+  .stat-number { font-size: 22px; }
+  .stat-icon { width: 32px; height: 32px; }
+  .results-layout { grid-template-columns: 1fr; }
+  .results-layout aside { display: flex; flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">B</div>
+      <div>
+        <div class="brand-name">BioLit Scout</div>
+        <div class="brand-caption">SCIENTIFIC DISCOVERY</div>
+      </div>
+    </div>
+
+    <div class="nav-label">WORKSPACE</div>
+    <button class="nav-item active" type="button" id="navResearch">
+      <span class="ico">⌕</span> Research
+    </button>
+    <button class="nav-item" type="button" id="navHistory">
+      <span class="ico">◷</span> Recent searches
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="workspace">
+        <small>Current workspace</small>
+        <strong>Research workspace</strong>
+        <small style="margin-top:8px">Powered by OpenAlex + Groq</small>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">Workspace &nbsp;/&nbsp; <strong id="breadcrumb">Research</strong></div>
+      <div class="api-status">
+        <span class="dot" id="apiDot"></span>
+        <span id="apiStatus">Checking API...</span>
+        <button id="checkApi" title="Check API connection" aria-label="Check API connection"
+          style="border:0;background:none;color:inherit;padding:0 0 0 5px">↻</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Your scientific research companion</div>
+          <h1>Scientific literature,<br>connected<span style="color:var(--coral)">.</span></h1>
+          <p>Discover evidence, compare scientific methods and uncover promising research directions with AI-assisted literature analysis.</p>
+        </div>
+        <span class="version">VERSION 0.3</span>
+      </section>
+
+      <section class="search-card" id="searchSection">
+        <label class="card-label" for="query">What would you like to investigate?</label>
+        <form id="searchForm">
+          <div class="search-row">
+            <input class="search-input" id="query" name="query"
+              placeholder="e.g. Deep learning for cell segmentation in microscopy images"
+              minlength="2" maxlength="300" required>
+            <button class="primary-btn" type="submit" id="analyzeBtn">✦ Analyze literature</button>
+          </div>
+          <div class="search-options">
+            <label for="limit">Number of publications</label>
+            <select id="limit" name="limit">
+              <option value="3" selected>3 publications</option>
+              <option value="5">5 publications</option>
+              <option value="10">10 publications</option>
+            </select>
+            <span class="hint">Results are based on available abstracts, not necessarily full texts.</span>
+          </div>
+        </form>
+        <div id="errorBox" class="alert hidden" role="alert"></div>
+      </section>
+
+      <section class="stats" aria-label="Research statistics">
+        <div class="stat">
+          <div><div class="stat-label">Publications found</div><div class="stat-number" id="foundCount">—</div></div>
+          <div class="stat-icon">▤</div>
+        </div>
+        <div class="stat">
+          <div><div class="stat-label">Abstracts analyzed</div><div class="stat-number" id="analyzedCount">—</div></div>
+          <div class="stat-icon">✧</div>
+        </div>
+        <div class="stat">
+          <div><div class="stat-label">Research directions</div><div class="stat-number" id="gapCount">—</div></div>
+          <div class="stat-icon">↗</div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <div>
+            <h2 id="resultsHeading">Your research results</h2>
+            <div class="section-sub" id="resultsSub">Start with a research question to explore the literature.</div>
+          </div>
+          <button class="secondary-btn hidden" id="copyBtn" type="button">▣ Copy report</button>
+        </div>
+
+        <div id="emptyState" class="empty">
+          <div class="empty-icon">⌕</div>
+          <h3>Your next discovery starts here</h3>
+          <p>Enter a scientific question above. BioLit Scout will retrieve relevant publications and build an AI-assisted analysis.</p>
+        </div>
+
+        <div id="resultsLayout" class="results-layout hidden">
+          <div>
+            <div id="publicationList" class="publication-list"></div>
+          </div>
+          <aside>
+            <section class="panel">
+              <div class="panel-title">
+                <div class="panel-icon">⇄</div>
+                <h3>Comparative synthesis</h3>
+              </div>
+              <p id="synthesis">The comparative synthesis will appear here.</p>
+            </section>
+            <section class="panel">
+              <div class="panel-title">
+                <div class="panel-icon">✧</div>
+                <h3>Research directions</h3>
+              </div>
+              <ol id="gapList" class="gap-list"></ol>
+              <div class="notice">AI-generated research directions are hypotheses based on the selected abstracts. Verify them against the wider literature.</div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <footer>BioLit Scout · Scientific discovery, assisted by AI · Analysis based on available metadata and abstracts</footer>
+    </div>
+  </main>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const API_BASE = "https://biolit-scout.onrender.com";
+
+  const $ = (id) => document.getElementById(id);
+  let currentReport = null;
+  let history = [];
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    })[char]);
+  }
+
+  function safeURL(value) {
+    try {
+      const url = new URL(value);
+      return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function notify(message) {
+    $("toast").textContent = message;
+    $("toast").classList.remove("hidden");
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => $("toast").classList.add("hidden"), 2600);
+  }
+
+  function showError(message) {
+    $("errorBox").textContent = message;
+    $("errorBox").classList.remove("hidden");
+  }
+
+  function clearError() {
+    $("errorBox").textContent = "";
+    $("errorBox").classList.add("hidden");
+  }
+
+  async function requestJSON(url, options = {}) {
+    let response;
+    try {
+      response = await fetch(url, options);
+    } catch {
+      throw new Error(
+        "Unable to reach the API. Check your internet connection and the API CORS configuration."
+      );
+    }
+
+    const text = await response.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(
+        `The API returned an invalid response (HTTP ${response.status}).`
+      );
+    }
+
+    if (!response.ok) {
+      const detail = typeof data.detail === "string"
+        ? data.detail
+        : `Request failed (HTTP ${response.status}).`;
+      throw new Error(detail);
+    }
+    return data;
+  }
+
+  async function checkAPI() {
+    $("apiStatus").textContent = "Checking API...";
+    $("apiDot").className = "dot";
+    try {
+      const data = await requestJSON(`${API_BASE}/health`);
+      if (data.status !== "ok") throw new Error("Unexpected health status");
+      $("apiDot").className = "dot online";
+      $("apiStatus").textContent = "API connected";
+    } catch {
+      $("apiDot").className = "dot offline";
+      $("apiStatus").textContent = "API unavailable";
+    }
+  }
+
+  function setLoading(loading) {
+    const btn = $("analyzeBtn");
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<span class="loader"></span>Analyzing...'
+      : "✦ Analyze literature";
+  }
+
+  function renderPublication(publication, index) {
+    const analysis = publication.analysis;
+    const title = publication.title || "Untitled publication";
+    const authors = Array.isArray(publication.authors)
+      ? publication.authors.join(", ")
+      : "";
+    const url = safeURL(publication.doi) ||
+      safeURL(publication.url) ||
+      safeURL(publication.id);
+    const abstract = publication.abstract || "No abstract is available for this publication.";
+    const journal = publication.journal || "Journal not specified";
+    const year = publication.year || "Year unknown";
+
+    const analysisHTML = analysis ? `
+      <div class="analysis">
+        <h4>Research objective</h4>
+        <p>${escapeHTML(analysis.objective || "Not specified in the analysis.")}</p>
+        <h4>Methodology</h4>
+        <p>${escapeHTML(analysis.methodology || "Not specified in the abstract.")}</p>
+        <h4>Main findings</h4>
+        <p>${escapeHTML(analysis.main_findings || "Not specified in the abstract.")}</p>
+        <h4>Limitations</h4>
+        <p>${escapeHTML(analysis.limitations || "Not specified in the abstract.")}</p>
+        <h4>Relevance to your question</h4>
+        <p>${escapeHTML(analysis.relevance_to_query || "Not specified.")}</p>
+      </div>` : `
+      <div class="analysis">
+        <span class="tag neutral">Not analyzed</span>
+        <p style="margin-top:9px">No analysis is available. The abstract may be missing or the model may not have returned an analysis for this publication.</p>
+      </div>`;
+
+    return `
+      <article class="paper">
+        <div class="paper-top">
+          <span class="tag">Study ${index + 1}</span>
+          <span class="tag neutral">${escapeHTML(year)}</span>
+          <span class="tag neutral">${escapeHTML(journal)}</span>
+          ${analysis ? "" : '<span class="tag coral">No analysis</span>'}
+        </div>
+        <h3>${escapeHTML(title)}</h3>
+        <div class="paper-meta">${escapeHTML(authors || "Authors not listed")}</div>
+        <p class="paper-abstract">${escapeHTML(abstract)}</p>
+        <div class="paper-actions">
+          ${url
+            ? `<a href="${escapeHTML(url)}" target="_blank" rel="noopener noreferrer">Read original publication ↗</a>`
+            : '<span class="paper-meta">No external link available</span>'}
+          <button class="secondary-btn abstract-toggle" type="button" aria-expanded="false">Hide abstract ↑</button>
+        </div>
+        ${analysisHTML}
+      </article>`;
+  }
+
+  function renderReport(data) {
+    currentReport = data;
+    const publications = Array.isArray(data.publications) ? data.publications : [];
+    const gaps = Array.isArray(data.research_gaps) ? data.research_gaps : [];
+
+    $("foundCount").textContent = data.searched_count ?? publications.length;
+    $("analyzedCount").textContent = data.analyzed_count ?? 0;
+    $("gapCount").textContent = gaps.length;
+    $("resultsHeading").textContent = "Research results";
+    $("resultsSub").textContent =
+      `${publications.length} publication(s) · ${data.analyzed_count ?? 0} analyzed · Query: ${data.query || ""}`;
+
+    $("emptyState").classList.add("hidden");
+    $("resultsLayout").classList.remove("hidden");
+    $("copyBtn").classList.remove("hidden");
+
+    $("publicationList").innerHTML = publications.length
+      ? publications.map(renderPublication).join("")
+      : `<div class="empty"><h3>No publications found</h3><p>Try another research question.</p></div>`;
+
+    $("synthesis").textContent = data.comparative_synthesis ||
+      data.message ||
+      "No comparative synthesis was generated for these results.";
+
+    $("gapList").innerHTML = gaps.length
+      ? gaps.map(gap => `<li>${escapeHTML(gap)}</li>`).join("")
+      : "<li>No research directions were returned for this query.</li>";
+
+    $("publicationList").querySelectorAll(".abstract-toggle").forEach(button => {
+      button.addEventListener("click", () => {
+        const paper = button.closest(".paper");
+        const abstract = paper.querySelector(".paper-abstract");
+        const hidden = abstract.classList.toggle("hidden");
+        button.textContent = hidden ? "Show abstract ↓" : "Hide abstract ↑";
+        button.setAttribute("aria-expanded", String(!hidden));
+      });
+    });
+  }
+
+  async function analyzeLiterature(query, limit) {
+    clearError();
+    setLoading(true);
+    $("resultsSub").textContent = "Searching publications and generating analysis...";
+    try {
+      const data = await requestJSON(`${API_BASE}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q: query, limit })
+      });
+
+      renderReport(data);
+      history = [
+        { query, limit, date: new Date().toLocaleString(), data },
+        ...history.filter(item => item.query !== query)
+      ].slice(0, 10);
+      await checkAPI();
+    } catch (error) {
+      showError(
+        `${error.message}\n\nIf the browser reports a CORS error, configure the backend to allow your Netlify domain.`
+      );
+      $("resultsSub").textContent = "The request could not be completed.";
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  $("searchForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const query = $("query").value.trim();
+    const limit = Number($("limit").value);
+    if (query.length < 2) {
+      showError("Please enter a research question containing at least 2 characters.");
+      return;
+    }
+    analyzeLiterature(query, limit);
+  });
+
+  $("checkApi").addEventListener("click", checkAPI);
+
+  $("copyBtn").addEventListener("click", async () => {
+    if (!currentReport) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(currentReport, null, 2));
+      notify("Research report copied to clipboard.");
+    } catch {
+      showError("Clipboard access was denied. Copy the response from the browser developer tools instead.");
+    }
+  });
+
+  $("navResearch").addEventListener("click", () => {
+    $("breadcrumb").textContent = "Research";
+    $("searchSection").scrollIntoView({ behavior: "smooth" });
+  });
+
+  $("navHistory").addEventListener("click", () => {
+    $("breadcrumb").textContent = "Recent searches";
+    if (!history.length) {
+      notify("Your searches in this session will appear here after the first analysis.");
+      return;
+    }
+    const menu = history.map((item, index) =>
+      `${index + 1}. ${item.query} (${item.date})`
+    ).join("\n");
+    const selection = prompt("Recent searches:\n\n" + menu +
+      "\n\nEnter a search number to run it again:");
+    if (selection === null) return;
+    const item = history[Number(selection) - 1];
+    if (!item) {
+      notify("Invalid selection.");
+      return;
+    }
+    $("query").value = item.query;
+    $("limit").value = String(item.limit);
+    analyzeLiterature(item.query, item.limit);
+  });
+
+  checkAPI();
+})();
+</script>
+</body>
+</html>
